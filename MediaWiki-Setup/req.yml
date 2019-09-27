@@ -1,0 +1,26 @@
+- hosts: bare
+  tasks:
+   - name: "Installing Docker"
+     package:
+       name: docker-ce
+       state: present
+
+   - name: "Restart Docker service"
+     service:
+       name: docker
+       state: restarted
+       enabled: yes
+   
+   - name: "Docker"
+     package:
+       name: python2-pip
+       state: present
+   
+   - pip:
+       name: docker-py
+   
+   - firewalld:
+       port: 80/tcp
+       permanent: yes
+       state: enabled
+       immediate: yes

@@ -1,0 +1,6 @@
+---
+# vars file for mediawiki
+#
+db_name: "mediawiki_db"
+user_name: "wiki_user"
+user_pass: "mediawiki"

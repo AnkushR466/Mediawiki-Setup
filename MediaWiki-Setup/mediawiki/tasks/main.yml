@@ -1,0 +1,102 @@
+---
+# tasks file for mediawiki
+#
+
+
+
+- name: "Creating yum repo"
+  yum_repository:
+     baseurl: "http://mirror.centos.org/centos/7/os/x86_64/"
+     description: "Centos_yum"
+     enabled: yes
+     file: "mediawiki"
+     name: "new_centos_yum"
+     state: present
+     gpgcheck: no
+
+- name: "PHP 7.3 installation"
+  yum:
+    name: http://rpms.remirepo.net/enterprise/remi-release-7.rpm
+    state: present
+
+- shell: yum-config-manager --enable remi-php73
+
+- name: "Installing softwares"
+  package:
+     name: "{{ item }}"
+     state: present
+  with_items:
+    - httpd 
+    - php  
+    - php-mysql 
+    - php-gd  
+    - mariadb-server 
+    - php-xml
+    - php-mbstring 
+    - php-intl  
+    - mysql
+    - epel-release
+    - python-pip
+    - mariadb-devel
+    - gcc
+    - python36-devel
+    - mcrypt
+
+- name: "Starting the services"
+  service:
+    name: "{{ item }}"
+    state: restarted
+    enabled: true
+  with_items:
+    - httpd
+    - mariadb
+  ignore_errors: yes
+  register: x
+
+- shell: /usr/sbin/httpd && /usr/libexec/mariadb-prepare-db-dir %n
+  when: x is failed
+
+- shell: "/usr/bin/mysqld_safe &"
+  when: x is failed
+
+- name: "Installing mysql-python module"
+  pip:
+    name: "MySQL-python"
+    state: present
+
+- name: "Create database mediawiki_db"
+  mysql_db:
+     #login_user: root
+     #login_password: redhat
+     name: "{{ db_name }}"
+     state: present
+
+- name: "Create database user with name 'wiki_user' and password 'mediawiki' with all database privileges"
+  mysql_user:
+      name: "{{ user_name  }}"
+      #login_user: root
+      #login_password: redhat
+      password: "{{ user_pass }}"
+      priv: '{{ db_name }}.*:ALL,GRANT'
+      state: present
+
+- name: "Downloading the mediawiki software"
+  get_url:
+    url: https://releases.wikimedia.org/mediawiki/1.32/mediawiki-core-1.32.3.tar.gz
+    dest: /root/
+
+- unarchive:
+    src: /root/mediawiki-core-1.32.3.tar.gz 
+    dest: /var/www/html/
+    remote_src: yes
+
+- shell: mv /var/www/html/mediawiki-1.32.3 /var/www/html/mediawiki
+
+- service:
+    name: "{{ item }}"
+    state: restarted
+  with_items:
+    - httpd
+    - mariadb
+    
+

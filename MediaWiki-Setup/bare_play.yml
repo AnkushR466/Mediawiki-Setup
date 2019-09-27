@@ -1,0 +1,4 @@
+- import_playbook: req.yml
+- hosts: bare
+  roles: 
+    - role: mediawiki

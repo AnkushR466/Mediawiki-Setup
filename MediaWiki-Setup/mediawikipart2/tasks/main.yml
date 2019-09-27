@@ -1,0 +1,35 @@
+---
+# tasks file for mediawikipart2
+#
+- copy:
+    src: Dockerfile_media
+    dest: "/root/Dockerfile"
+
+- docker_image:
+    name: mediawiki:v1
+    build:
+      dockrefile: Dockerfile
+      path: /root/
+    pull: no
+    state: present
+
+- docker_container:
+    name: cont1
+    detach: true
+    interactive: true
+    tty: true
+    image: mediawiki:v1
+    state: started
+    published_ports:
+      - "80:80"
+
+- docker_container:
+    name: mysql_cont1
+    interactive: true
+    tty: true
+    image: dunefro/media_sql:v2
+    state: started
+    detach: true
+    command: "mysqld_safe"
+    
+
